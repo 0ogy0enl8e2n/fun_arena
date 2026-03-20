@@ -1,0 +1,44 @@
+name: Build Flutter AAB
+
+on:
+  push:
+    branches: [ "main" ] # Сборка будет запускаться каждый раз, когда ты пушишь в main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build AAB
+        run: |
+          flutter build appbundle --release \
+            --build-name=1.0.0 \
+            --build-number=1 \
+            --signing-key-store-path=upload-keystore.jks \
+            --signing-key-store-password=${{ secrets.KEYSTORE_PASSWORD }} \
+            --signing-key-alias=${{ secrets.KEY_ALIAS }} \
+            --signing-key-password=${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload Result
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
