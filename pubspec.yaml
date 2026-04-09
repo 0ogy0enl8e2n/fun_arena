@@ -27,6 +27,8 @@ flutter_launcher_icons:
   ios: true
   image_path: "newIcon.png"
   min_sdk_android: 21
+  adaptive_icon_background: "newIcon.png"
+  adaptive_icon_foreground: "newIcon.png"
 
 flutter:
   uses-material-design: true
