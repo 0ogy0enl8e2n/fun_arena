@@ -16,6 +16,7 @@ import 'screens/tournaments/tournaments_screen.dart';
 import 'screens/tournaments/add_edit_tournament_screen.dart';
 import 'screens/stats/stats_screen.dart';
 import 'widgets/app_shell.dart';
+import 'widgets/debug_overlay.dart';
 
 class FanArenaApp extends StatelessWidget {
   const FanArenaApp({super.key});
@@ -32,6 +33,15 @@ class FanArenaApp extends StatelessWidget {
       themeMode: provider.themeModeEnum,
       initialRoute: '/',
       onGenerateRoute: _generateRoute,
+      builder: (context, child) => Stack(
+        children: [
+          child!,
+          const Visibility(
+            visible: false,
+            child: DebugOverlay(),
+          ),
+        ],
+      ),
     );
   }
 
