@@ -1,12 +1,19 @@
 package com.dimakrash.fanarena.fan_arena
 
+import android.os.Bundle
 import android.provider.Settings
+import androidx.activity.enableEdgeToEdge
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.dimakrash.fanarena/debug_info"
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
