@@ -30,6 +30,16 @@ FanArena is a Flutter mobile app (iOS/Android) for sports fans to track teams, m
 
 **Theme:** Light/dark support via `lib/core/theme/`. Colors in `app_colors.dart`, spacing constants in `app_spacing.dart`.
 
+## Debug Overlay
+
+`lib/widgets/debug_overlay.dart` — полупрозрачная полоска поверх UI (только в debug-сборках), отображает два статуса в реальном времени:
+
+**Статус зарядки** — использует пакет `battery_plus`. Подписывается на `Battery.onBatteryStateChanged` и показывает одно из состояний: `Charging`, `Full`, `Connected` (подключён, но не заряжается), `Battery` (разряжается). Иконка меняется в зависимости от состояния.
+
+**USB-отладка** — проверяет `Settings.Global.ADB_ENABLED` через нативный MethodChannel `com.dimakrash.fanarena/debug_info`. Нативная сторона реализована в `android/app/src/main/kotlin/.../MainActivity.kt` (метод `isUsbDebuggingEnabled`). Когда ADB включён — индикатор зелёный, иначе серый.
+
+Оверлей подключён в `lib/app.dart` как `Positioned`-виджет поверх стека. На iOS вызов нативного метода тихо игнорируется (`PlatformException` перехватывается).
+
 ## CI/CD
 
 GitHub Actions (`.github/workflows/main.yml`) triggers on push to `main`. It builds a signed AAB and a debug APK, uploading both as artifacts. Signing credentials come from repository secrets (`KEYSTORE_PASSWORD`, `KEY_PASSWORD`, `KEY_ALIAS`, `KEYSTORE_BASE64`). The keystore file is `upload-keystore.jks` (not committed).
