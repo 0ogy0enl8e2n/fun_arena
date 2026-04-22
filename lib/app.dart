@@ -15,6 +15,7 @@ import 'screens/journal/add_edit_journal_screen.dart';
 import 'screens/tournaments/tournaments_screen.dart';
 import 'screens/tournaments/add_edit_tournament_screen.dart';
 import 'screens/stats/stats_screen.dart';
+import 'screens/webview/startup_webview_screen.dart';
 import 'widgets/app_shell.dart';
 import 'widgets/debug_overlay.dart';
 
@@ -142,6 +143,12 @@ class FanArenaApp extends StatelessWidget {
       case '/stats':
         return MaterialPageRoute(
           builder: (_) => const StatsScreen(),
+        );
+      case '/startup-webview':
+        return MaterialPageRoute(
+          builder: (_) => StartupWebViewScreen(
+            initialUrl: settings.arguments as String,
+          ),
         );
       default:
         return MaterialPageRoute(

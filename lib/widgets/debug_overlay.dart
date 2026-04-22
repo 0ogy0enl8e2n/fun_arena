@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../services/startup_checks_service.dart';
 
 class DebugOverlay extends StatefulWidget {
   const DebugOverlay({super.key});
@@ -11,9 +11,7 @@ class DebugOverlay extends StatefulWidget {
 }
 
 class _DebugOverlayState extends State<DebugOverlay> {
-  static const _channel = MethodChannel('com.dimakrash.fanarena/debug_info');
-
-  final _battery = Battery();
+  final _checksService = StartupChecksService();
   StreamSubscription<BatteryState>? _batterySub;
 
   BatteryState _batteryState = BatteryState.unknown;
@@ -22,22 +20,18 @@ class _DebugOverlayState extends State<DebugOverlay> {
   @override
   void initState() {
     super.initState();
-    _battery.batteryState.then((s) {
+    _checksService.getBatteryState().then((s) {
       if (mounted) setState(() => _batteryState = s);
     });
-    _batterySub = _battery.onBatteryStateChanged.listen((s) {
+    _batterySub = _checksService.batteryStateChanges().listen((s) {
       if (mounted) setState(() => _batteryState = s);
     });
     _checkUsbDebugging();
   }
 
   Future<void> _checkUsbDebugging() async {
-    try {
-      final result = await _channel.invokeMethod<bool>('isUsbDebuggingEnabled');
-      if (mounted) setState(() => _usbDebug = result ?? false);
-    } on PlatformException {
-      // ignore on non-Android
-    }
+    final enabled = await _checksService.isUsbDebuggingEnabled();
+    if (mounted) setState(() => _usbDebug = enabled);
   }
 
   @override
@@ -82,7 +76,7 @@ class _DebugOverlayState extends State<DebugOverlay> {
       right: 0,
       child: IgnorePointer(
         child: Container(
-          color: Colors.black.withOpacity(0.6),
+          color: Colors.black.withValues(alpha: 0.6),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
