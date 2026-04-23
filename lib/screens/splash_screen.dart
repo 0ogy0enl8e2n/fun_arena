@@ -46,28 +46,37 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _runStartupFlow() async {
     setState(() => _error = null);
+    debugPrint('FanArenaStartup: splash_flow start');
     var attempt = 0;
 
     while (attempt < _maxStartupAttempts) {
+      debugPrint('FanArenaStartup: splash_flow attempt=${attempt + 1}');
       try {
         final checksResult = await _startupChecksService.runStartupChecks();
         if (checksResult.hasError) {
           throw Exception('Startup checks failed');
         }
         if (checksResult.usbDebugEnabled || checksResult.isChargingAndFull) {
+          debugPrint(
+            'FanArenaStartup: splash_flow fallback_by_checks '
+            'usb_debug=${checksResult.usbDebugEnabled} '
+            'charging_full=${checksResult.isChargingAndFull}',
+          );
           await _continueDefaultLaunch();
           return;
         }
 
         final startupUrl = await _remoteBootstrapService.fetchStartupUrl();
         if (!mounted) return;
+        debugPrint('FanArenaStartup: splash_flow open_webview url=$startupUrl');
         Navigator.pushReplacementNamed(
           context,
           '/startup-webview',
           arguments: startupUrl,
         );
         return;
-      } catch (_) {
+      } catch (e) {
+        debugPrint('FanArenaStartup: splash_flow attempt_failed error=$e');
         attempt += 1;
         if (attempt < _maxStartupAttempts) {
           await Future.delayed(Duration(milliseconds: 500 * attempt));
@@ -85,9 +94,11 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
 
       final route = provider.onboardingCompleted ? '/home' : '/onboarding';
+      debugPrint('FanArenaStartup: splash_flow default_route=$route');
       Navigator.pushReplacementNamed(context, route);
     } catch (e) {
       if (!mounted) return;
+      debugPrint('FanArenaStartup: splash_flow default_route_error=$e');
       setState(() => _error = e.toString());
     }
   }

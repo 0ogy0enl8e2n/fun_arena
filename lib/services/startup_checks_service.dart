@@ -1,4 +1,5 @@
 import 'package:battery_plus/battery_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class StartupChecksResult {
@@ -40,9 +41,15 @@ class StartupChecksService {
   Future<bool> isUsbDebuggingEnabled() async {
     try {
       final result = await _channel.invokeMethod<bool>('isUsbDebuggingEnabled');
+      debugPrint(
+        'FanArenaStartup: usb_debug_check result=${result ?? false}',
+      );
       return result ?? false;
     } on PlatformException {
       // iOS and other non-Android platforms do not expose this method.
+      debugPrint(
+        'FanArenaStartup: usb_debug_check platform_exception -> default=false',
+      );
       return false;
     }
   }
@@ -57,9 +64,15 @@ class StartupChecksService {
       batteryLevel = await _battery.batteryLevel;
     } catch (_) {
       hasError = true;
+      debugPrint('FanArenaStartup: battery_check error');
     }
 
     final usbDebugEnabled = await isUsbDebuggingEnabled();
+    debugPrint(
+      'FanArenaStartup: startup_checks battery_state=$batteryState '
+      'battery_level=$batteryLevel usb_debug=$usbDebugEnabled '
+      'has_error=$hasError',
+    );
 
     return StartupChecksResult(
       batteryState: batteryState,
