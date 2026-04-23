@@ -42,11 +42,14 @@ jobs:
       - name: Generate App Icons
         run: flutter pub run flutter_launcher_icons
 
+      - name: Set build number from workflow run
+        run: echo "BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+
       - name: Build AAB
-        run: flutter build appbundle --release --build-name=1.1.0 --build-number=4
+        run: flutter build appbundle --release --build-name=1.1.0 --build-number=$BUILD_NUMBER
 
       - name: Build APK
-        run: flutter build apk --debug --build-name=1.1.0 --build-number=4
+        run: flutter build apk --debug --build-name=1.1.0 --build-number=$BUILD_NUMBER
 
       - name: Upload AAB
         uses: actions/upload-artifact@v5
