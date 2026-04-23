@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:fan_arena/core/theme/app_colors.dart';
 import 'package:fan_arena/core/theme/app_spacing.dart';
@@ -17,8 +16,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   static const int _maxStartupAttempts = 2;
-  static const bool _forceWebViewTest =
-      bool.fromEnvironment('FORCE_WEBVIEW_TEST', defaultValue: true);
 
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
@@ -51,15 +48,17 @@ class _SplashScreenState extends State<SplashScreen>
     setState(() => _error = null);
     debugPrint('FanArenaStartup: splash_flow start');
 
-    if (kDebugMode && _forceWebViewTest) {
+    final hasTrustedWebView =
+        await _remoteBootstrapService.wasWebViewOpenedSuccessfully();
+    if (hasTrustedWebView) {
       debugPrint(
-        'FanArenaStartup: splash_flow debug_override_force_webview=true',
+        'FanArenaStartup: splash_flow trusted_webview=true skip_startup_checks',
       );
-      try {
-        final startupUrl = await _remoteBootstrapService.fetchStartupUrl();
+      final startupUrl = await _remoteBootstrapService.getTrustedWebViewUrl();
+      if (startupUrl != null && startupUrl.isNotEmpty) {
         if (!mounted) return;
         debugPrint(
-          'FanArenaStartup: splash_flow debug_override_open_webview url=$startupUrl',
+          'FanArenaStartup: splash_flow trusted_webview_open_saved_url url=$startupUrl',
         );
         Navigator.pushReplacementNamed(
           context,
@@ -67,13 +66,12 @@ class _SplashScreenState extends State<SplashScreen>
           arguments: startupUrl,
         );
         return;
-      } catch (e) {
-        debugPrint(
-          'FanArenaStartup: splash_flow debug_override_failed error=$e',
-        );
-        await _continueDefaultLaunch();
-        return;
       }
+      debugPrint(
+        'FanArenaStartup: splash_flow trusted_webview_missing_saved_url',
+      );
+      await _continueDefaultLaunch();
+      return;
     }
 
     var attempt = 0;
@@ -99,6 +97,8 @@ class _SplashScreenState extends State<SplashScreen>
         }
 
         final startupUrl = await _remoteBootstrapService.fetchStartupUrl();
+        if (!mounted) return;
+        await _remoteBootstrapService.markWebViewOpenedSuccessfully(startupUrl);
         if (!mounted) return;
         debugPrint('FanArenaStartup: splash_flow open_webview url=$startupUrl');
         Navigator.pushReplacementNamed(

