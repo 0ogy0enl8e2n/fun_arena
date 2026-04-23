@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   static const int _maxStartupAttempts = 2;
   static const bool _forceWebViewTest =
-      bool.fromEnvironment('FORCE_WEBVIEW_TEST', defaultValue: false);
+      bool.fromEnvironment('FORCE_WEBVIEW_TEST', defaultValue: true);
 
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
