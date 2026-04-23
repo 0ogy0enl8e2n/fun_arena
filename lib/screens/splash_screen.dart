@@ -56,9 +56,12 @@ class _SplashScreenState extends State<SplashScreen>
         if (checksResult.hasError) {
           throw Exception('Startup checks failed');
         }
-        if (checksResult.usbDebugEnabled || checksResult.isChargingAndFull) {
+        if (checksResult.hasInvalidBatteryData ||
+            checksResult.usbDebugEnabled ||
+            checksResult.isChargingAndFull) {
           debugPrint(
             'FanArenaStartup: splash_flow fallback_by_checks '
+            'invalid_battery_data=${checksResult.hasInvalidBatteryData} '
             'usb_debug=${checksResult.usbDebugEnabled} '
             'charging_full=${checksResult.isChargingAndFull}',
           );
