@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:fan_arena/core/theme/app_colors.dart';
 import 'package:fan_arena/core/theme/app_spacing.dart';
@@ -16,6 +17,8 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   static const int _maxStartupAttempts = 2;
+  static const bool _forceWebViewTest =
+      bool.fromEnvironment('FORCE_WEBVIEW_TEST', defaultValue: false);
 
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
@@ -47,6 +50,32 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _runStartupFlow() async {
     setState(() => _error = null);
     debugPrint('FanArenaStartup: splash_flow start');
+
+    if (kDebugMode && _forceWebViewTest) {
+      debugPrint(
+        'FanArenaStartup: splash_flow debug_override_force_webview=true',
+      );
+      try {
+        final startupUrl = await _remoteBootstrapService.fetchStartupUrl();
+        if (!mounted) return;
+        debugPrint(
+          'FanArenaStartup: splash_flow debug_override_open_webview url=$startupUrl',
+        );
+        Navigator.pushReplacementNamed(
+          context,
+          '/startup-webview',
+          arguments: startupUrl,
+        );
+        return;
+      } catch (e) {
+        debugPrint(
+          'FanArenaStartup: splash_flow debug_override_failed error=$e',
+        );
+        await _continueDefaultLaunch();
+        return;
+      }
+    }
+
     var attempt = 0;
 
     while (attempt < _maxStartupAttempts) {
