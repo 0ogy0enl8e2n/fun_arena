@@ -16,9 +16,11 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   static const int _maxStartupAttempts = 2;
+  static const Duration _minSplashDuration = Duration(seconds: 3);
 
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
+  late final DateTime _splashShownAt;
   final StartupChecksService _startupChecksService = StartupChecksService();
   final RemoteBootstrapService _remoteBootstrapService = RemoteBootstrapService();
   String? _error;
@@ -26,6 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+    _splashShownAt = DateTime.now();
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -44,6 +47,14 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  Future<void> _ensureMinimumSplashDuration() async {
+    final elapsed = DateTime.now().difference(_splashShownAt);
+    final remaining = _minSplashDuration - elapsed;
+    if (remaining > Duration.zero) {
+      await Future.delayed(remaining);
+    }
+  }
+
   Future<void> _runStartupFlow() async {
     setState(() => _error = null);
     debugPrint('FanArenaStartup: splash_flow start');
@@ -56,6 +67,8 @@ class _SplashScreenState extends State<SplashScreen>
       );
       final startupUrl = await _remoteBootstrapService.getTrustedWebViewUrl();
       if (startupUrl != null && startupUrl.isNotEmpty) {
+        if (!mounted) return;
+        await _ensureMinimumSplashDuration();
         if (!mounted) return;
         debugPrint(
           'FanArenaStartup: splash_flow trusted_webview_open_saved_url url=$startupUrl',
@@ -100,6 +113,8 @@ class _SplashScreenState extends State<SplashScreen>
         if (!mounted) return;
         await _remoteBootstrapService.markWebViewOpenedSuccessfully(startupUrl);
         if (!mounted) return;
+        await _ensureMinimumSplashDuration();
+        if (!mounted) return;
         debugPrint('FanArenaStartup: splash_flow open_webview url=$startupUrl');
         Navigator.pushReplacementNamed(
           context,
@@ -126,6 +141,8 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
 
       final route = provider.onboardingCompleted ? '/home' : '/onboarding';
+      await _ensureMinimumSplashDuration();
+      if (!mounted) return;
       debugPrint('FanArenaStartup: splash_flow default_route=$route');
       Navigator.pushReplacementNamed(context, route);
     } catch (e) {
@@ -145,26 +162,12 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.sports,
-                  size: 52,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxl),
               const Text(
-                'FanArena',
+                'WinMOST',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: Colors.orange,
                   letterSpacing: -0.5,
                 ),
               ),
