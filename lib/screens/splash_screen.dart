@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fan_arena/core/theme/app_colors.dart';
-import 'package:fan_arena/core/theme/app_spacing.dart';
 import 'package:fan_arena/providers/app_provider.dart';
 import 'package:fan_arena/services/remote_bootstrap_service.dart';
 import 'package:fan_arena/services/startup_checks_service.dart';
@@ -23,7 +21,6 @@ class _SplashScreenState extends State<SplashScreen>
   late final DateTime _splashShownAt;
   final StartupChecksService _startupChecksService = StartupChecksService();
   final RemoteBootstrapService _remoteBootstrapService = RemoteBootstrapService();
-  String? _error;
 
   @override
   void initState() {
@@ -56,7 +53,6 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _runStartupFlow() async {
-    setState(() => _error = null);
     debugPrint('FanArenaStartup: splash_flow start');
 
     final hasTrustedWebView =
@@ -148,68 +144,16 @@ class _SplashScreenState extends State<SplashScreen>
     } catch (e) {
       if (!mounted) return;
       debugPrint('FanArenaStartup: splash_flow default_route_error=$e');
-      setState(() => _error = e.toString());
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: const Color(0xFF000FAA),
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'WinMOST',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.orange,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xxxl),
-              if (_error != null) ...[
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
-                  child: Text(
-                    'Something went wrong. Please try again.',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                ElevatedButton.icon(
-                  onPressed: _runStartupFlow,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppCorners.md),
-                    ),
-                  ),
-                ),
-              ] else
-                const SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: Colors.white,
-                  ),
-                ),
-            ],
-          ),
-        ),
+        child: const SizedBox.expand(),
       ),
     );
   }
