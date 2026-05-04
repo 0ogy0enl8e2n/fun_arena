@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:fan_arena/core/theme/app_colors.dart';
 import 'package:fan_arena/core/theme/app_spacing.dart';
 import 'package:fan_arena/providers/app_provider.dart';
@@ -16,6 +17,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  static final Uri _privacyPolicyUri = Uri.parse(
+    'https://docs.google.com/document/d/1seLXVKe6E7wMqADDBKmuFITKuqw-W0HIW_tjw9INHDg/edit?usp=sharing',
+  );
+
   String _version = '...';
 
   @override
@@ -171,6 +176,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.tag),
             title: const Text('Version'),
             subtitle: Text(_version),
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('Privacy Policy'),
+            subtitle: const Text('Open policy document'),
+            trailing: const Icon(Icons.open_in_new),
+            onTap: () => _openPrivacyPolicy(context),
           ),
           const SizedBox(height: AppSpacing.xxxl),
         ],
@@ -436,5 +448,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         duration: const Duration(seconds: 4),
       ),
     );
+  }
+
+  Future<void> _openPrivacyPolicy(BuildContext context) async {
+    final opened = await launchUrl(
+      _privacyPolicyUri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!opened && context.mounted) {
+      _showSnackBar(
+        context,
+        'Could not open Privacy Policy link',
+        backgroundColor: AppColors.error,
+      );
+    }
   }
 }

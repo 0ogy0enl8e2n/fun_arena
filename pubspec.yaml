@@ -18,6 +18,7 @@ dependencies:
   battery_plus: ^6.0.0
   http: ^1.6.0
   webview_flutter: ^4.13.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
