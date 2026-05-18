@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="MostWin Fan Sports Tracker"
+        android:label="Most Fan Bet Tracker"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
